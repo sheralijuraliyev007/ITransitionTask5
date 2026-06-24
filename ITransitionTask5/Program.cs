@@ -14,9 +14,10 @@ builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
     {
         policy.WithOrigins(
-                "https://localhost:7154",
-                "http://localhost:5174"
-            )
+    "https://localhost:7154",
+    "http://localhost:5174",
+    "http://82.208.22.154:5008"  
+)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });

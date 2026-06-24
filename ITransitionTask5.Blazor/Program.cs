@@ -12,7 +12,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient
 {
-    BaseAddress = new Uri("http://localhost:5162/")
+    BaseAddress = new Uri("http://82.208.22.154:5007/")
 });
 
 builder.Services.AddScoped<SongsApiService>();
