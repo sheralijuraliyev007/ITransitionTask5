@@ -1,0 +1,14 @@
+[
+  {
+    "locale": "en",
+    "genres": [ "Pop", "Rock", "Hip-Hop", "Jazz", "Classical", "Electronic", "R&B", "Metal", "Indie", "Country", "Folk", "Blues", "Reggae", "Punk", "Soul", "Funk", "Disco", "House", "Techno", "Ambient" ]
+  },
+  {
+    "locale": "ru",
+    "genres": [ "Поп", "Рок", "Хип-хоп", "Джаз", "Классическая музыка", "Электронная музыка", "R&B", "Метал", "Инди", "Кантри", "Фолк", "Блюз", "Регги", "Панк", "Соул", "Фанк", "Диско", "Хаус", "Техно", "Эмбиент" ]
+  },
+  {
+    "locale": "es",
+    "genres": [ "Pop", "Rock", "Hip-Hop", "Jazz", "Clásica", "Electrónica", "R&B", "Metal", "Indie", "Country", "Folk", "Blues", "Reggae", "Punk", "Soul", "Funk", "Disco", "House", "Tecno", "Ambient" ]
+  }
+]

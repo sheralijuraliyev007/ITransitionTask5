@@ -1,0 +1,89 @@
+﻿@inject IJSRuntime JS
+@implements IDisposable
+
+<div class="lyrics-player">
+    <audio id="audio-@SongIndex" controls src="@AudioUrl"
+           class="audio-player"
+           @onplay="OnPlay" @onpause="OnStop" @onended="OnEnded" />
+
+    @if (lyrics.Count > 0)
+    {
+        <div class="lyrics-container">
+            @foreach (var line in lyrics)
+            {
+                <div class="lyric-line @(line == activeLine ? "active" : "inactive")">
+                    @line.Text
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int SongIndex { get; set; }
+    [Parameter] public long Seed { get; set; }
+    [Parameter] public string Locale { get; set; } = "en";
+    [Parameter] public string AudioUrl { get; set; } = "";
+
+    [Inject] SongsApiService Api { get; set; } = default!;
+
+    private List<LyricLineDto> lyrics = new();
+    private LyricLineDto? activeLine;
+    private System.Threading.Timer? _timer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        lyrics = await Api.GetLyrics(Seed, SongIndex, Locale) ?? new();
+    }
+
+    private void OnPlay()
+    {
+        _timer = new System.Threading.Timer(async _ =>
+        {
+            try
+            {
+                double currentTime = await JS.InvokeAsync<double>(
+                    "eval", $"document.getElementById('audio-{SongIndex}')?.currentTime ?? 0");
+
+                var line = lyrics.LastOrDefault(l => l.StartSeconds <= currentTime);
+
+                if (line != null && line != activeLine)
+                {
+                    activeLine = line;
+                    var speechUrl = Api.GetSpeechUrl(SongIndex, line.Text, Locale);
+                    await JS.InvokeVoidAsync("eval", $@"
+                        if (window._speechAudio) {{
+                            window._speechAudio.pause();
+                            window._speechAudio = null;
+                        }}
+                        window._speechAudio = new Audio('{speechUrl}');
+                        window._speechAudio.play();
+                    ");
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+            catch { }
+        }, null, 0, 250);
+    }
+
+    private void OnStop()
+    {
+        _timer?.Dispose();
+        _timer = null;
+        JS.InvokeVoidAsync("eval", @"
+            if (window._speechAudio) {
+                window._speechAudio.pause();
+                window._speechAudio = null;
+            }
+        ");
+    }
+
+    private void OnEnded()
+    {
+        OnStop();
+        activeLine = null;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose() => OnStop();
+}

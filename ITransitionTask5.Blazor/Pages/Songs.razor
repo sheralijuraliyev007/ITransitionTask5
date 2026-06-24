@@ -1,0 +1,276 @@
+﻿@page "/"
+@page "/songs"
+
+@inject SongsApiService Api
+@inject IJSRuntime JS
+@using System
+@using System.Collections.Generic
+@using System.Linq
+@using System.Threading.Tasks
+@using Sve.Blazor.InfiniteScroll.Components
+@using Sve.Blazor.InfiniteScroll
+
+<div class="toolbar">
+    <label>
+        View
+        <select @bind="ViewMode" @bind:after="ViewChanged">
+            <option value="pagination">Pagination</option>
+            <option value="gallery">Gallery</option>
+        </select>
+    </label>
+
+    <label>
+        Language
+        <select @bind="Locale" @bind:after="Reload">
+            <option value="en">English (US)</option>
+            <option value="ru">Russian</option>
+            <option value="es">Spanish</option>
+        </select>
+    </label>
+
+    <label>
+        Seed
+        <input type="number" @bind="Seed" @bind:after="Reload" style="width:130px" />
+        <button @onclick="RandomSeed">🔀</button>
+    </label>
+
+    <label>
+        Likes &nbsp;
+        <input type="range" min="0" max="10" step="0.1"
+               value="@Likes" @oninput="OnLikesChanged" style="width:160px" />
+        @Likes.ToString("0.0")
+    </label>
+
+    @if (ViewMode == "pagination")
+    {
+        <label>
+            Rows
+            <select @bind="PageSize" @bind:after="OnPageSizeChanged">
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+        </label>
+        
+    }
+</div>
+
+@if (ViewMode == "pagination")
+{
+    @if (songs == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else if (songs.Count == 0)
+    {
+        <p>No songs found.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Artist</th>
+                    <th>Album</th>
+                    <th>Genre</th>
+                    <th>Likes</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var song in songs)
+                {
+                    <tr @key="song.Index"
+                        style="background:@(expandedIndex == song.Index ? "#f0f4ff" : "white")"
+                        @onclick="() => Toggle(song.Index)">
+                        <td style="color:#888">@song.Index</td>
+                        <td style="font-weight:600">@song.Title</td>
+                        <td>@song.Artist</td>
+                        <td style="color:#555">@song.Album</td>
+                        <td style="color:#555">@song.Genre</td>
+                        <td>❤ @song.Likes</td>
+                    </tr>
+
+                    @if (expandedIndex == song.Index)
+                    {
+                        <tr @key="@($"exp-{song.Index}")" class="expanded-row">
+                            <td colspan="6" @onclick:stopPropagation="true">
+                                <div class="expanded-content">
+                                    <img class="song-cover"
+                                         src="@Api.GetCoverUrl(Seed, song.Index, song.Title, song.Artist, song.Album, Locale)" />
+                                    <div style="flex:1">
+                                        <div class="song-title">@song.Title</div>
+                                        <div class="song-meta">
+                                            from <i>@song.Album</i> by <b>@song.Artist</b> &nbsp;·&nbsp; @song.Genre
+                                        </div>
+                                        <div class="song-review">"@song.Review"</div>
+                                        <LyricsPlayer SongIndex="@song.Index" Seed="@Seed" Locale="@Locale"
+                                                      AudioUrl="@Api.GetAudioUrl(Seed, song.Index)" />
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+
+        <div class="pagination">
+            <button @onclick="() => GoTo(1)" disabled="@(Page == 1)">«</button>
+            <button @onclick="() => GoTo(Page - 1)" disabled="@(Page == 1)">‹</button>
+            <span>Page @Page</span>
+            <button @onclick="() => GoTo(Page + 1)">›</button>
+        </div>
+    }
+}
+else
+{
+    <div class="gallery-header">
+        <div style="width:32px">#</div>
+        <div style="flex:1">Title</div>
+        <div style="flex:1">Artist</div>
+        <div style="flex:1">Album — Genre</div>
+        <div style="width:60px">Likes</div>
+        <div style="width:20px"></div>
+    </div>
+
+    <div style="height:700px; overflow-y:auto">
+        <InfiniteScroll ObserverTargetId="galleryObserver" ObservableTargetReached="LoadMore">
+
+            @foreach (var song in gallerySongs)
+            {
+                <div @key="song.Index" class="gallery-row" @onclick="() => ToggleGallery(song.Index)">
+
+                    <div class="gallery-row-inner">
+                        <div class="index-col">@song.Index</div>
+                        <div style="font-size:15px; font-weight:600; flex:1">@song.Title</div>
+                        <div style="color:#555; flex:1">@song.Artist</div>
+                        <div style="color:#aaa; font-size:13px; flex:1">@song.Album — @song.Genre</div>
+                        <div class="likes-col">❤️ @song.Likes</div>
+                        <span class="chevron">@(galleryExpanded.Contains(song.Index) ? "▲" : "▼")</span>
+                    </div>
+
+                    @if (galleryExpanded.Contains(song.Index))
+                    {
+                        <div class="gallery-expanded" @onclick:stopPropagation="true">
+                            <img class="gallery-cover"
+                                 src="@Api.GetCoverUrl(Seed, song.Index, song.Title, song.Artist, song.Album, Locale)" />
+                            <div>
+                                <div class="song-title">@song.Title</div>
+                                <div class="song-meta">from <i>@song.Album</i> by <b>@song.Artist</b></div>
+                                <div class="song-review">"@song.Review"</div>
+                                <LyricsPlayer SongIndex="@song.Index" Seed="@Seed" Locale="@Locale"
+                                              AudioUrl="@Api.GetAudioUrl(Seed, song.Index)" />
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (isLoadingGallery)
+            {
+                <p style="text-align:center; color:#888">Loading more songs…</p>
+            }
+
+            <div id="galleryObserver" style="height:1px"></div>
+        </InfiniteScroll>
+    </div>
+}
+
+@code {
+    List<SongDto>? songs;
+    int expandedIndex = -1;
+
+    List<SongDto> gallerySongs = new();
+    HashSet<int> galleryExpanded = new();
+    int galleryPage = 1;
+    const int GalleryPageSize = 15;
+    bool isLoadingGallery = false;
+    bool likesOnlyUpdate = false;
+
+    int Page = 1;
+    int PageSize = 10;
+    long Seed = 12345;
+    double Likes = 3.0;
+    string Locale = "en";
+    string ViewMode = "pagination";
+
+    protected override async Task OnInitializedAsync() => await Load();
+
+    async Task OnPageSizeChanged() { Page = 1; expandedIndex = -1; await Load(); }
+
+    async Task Reload()
+    {
+        expandedIndex = -1;
+        galleryExpanded.Clear();
+        Page = 1;
+        galleryPage = 1;
+        gallerySongs.Clear();
+        if (ViewMode == "pagination") await Load();
+        else await LoadMore();
+    }
+
+    async Task ViewChanged()
+    {
+        expandedIndex = -1;
+        galleryExpanded.Clear();
+        Page = 1;
+        galleryPage = 1;
+        gallerySongs.Clear();
+        if (ViewMode == "pagination") await Load();
+        else await LoadMore();
+    }
+
+    async Task Load()
+    {
+        if (!likesOnlyUpdate) { songs = null; StateHasChanged(); }
+        songs = await Api.GetSongs(Seed, Page, PageSize, Locale, Likes);
+        StateHasChanged();
+    }
+
+    async Task OnLikesChanged(ChangeEventArgs e)
+    {
+        Likes = double.Parse(e.Value!.ToString()!);
+        likesOnlyUpdate = true;
+
+        if (ViewMode == "pagination")
+        {
+            await Load();
+        }
+        else
+        {
+            var refreshed = new List<SongDto>();
+            for (int p = 1; p < galleryPage; p++)
+            {
+                var page = await Api.GetSongs(Seed, p, GalleryPageSize, Locale, Likes);
+                if (page != null) refreshed.AddRange(page);
+            }
+            gallerySongs = refreshed;
+            StateHasChanged();
+        }
+
+        likesOnlyUpdate = false;
+    }
+
+    async Task GoTo(int p) { Page = p; expandedIndex = -1; await Load(); }
+
+    void Toggle(int i) => expandedIndex = expandedIndex == i ? -1 : i;
+
+    void ToggleGallery(int i) { if (!galleryExpanded.Remove(i)) galleryExpanded.Add(i); }
+
+    async Task RandomSeed() { Seed = new Random().NextInt64(1, 999_999_999); await Reload(); }
+
+    async Task LoadMore()
+    {
+        if (isLoadingGallery) return;
+        isLoadingGallery = true;
+        StateHasChanged();
+        var newSongs = await Api.GetSongs(Seed, galleryPage, GalleryPageSize, Locale, Likes);
+        if (newSongs != null) { gallerySongs.AddRange(newSongs); galleryPage++; }
+        isLoadingGallery = false;
+        StateHasChanged();
+    }
+
+}
