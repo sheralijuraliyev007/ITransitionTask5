@@ -100,20 +100,30 @@ namespace ITransitionTask5.Services
         //    return await response.Content.ReadAsByteArrayAsync();
         //}
 
-        public byte[] GetSpeech(string text)
+        public byte[] GetSpeech(string text, string locale = "en")
         {
+            var voicePath = locale switch
+            {
+                "ru" => "/app/voices/ru.onnx",
+                "es" => "/app/voices/es.onnx",
+                _ => "/app/voices/en.onnx"
+            };
+
             var tmpFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".wav");
             var process = new System.Diagnostics.Process
             {
                 StartInfo = new System.Diagnostics.ProcessStartInfo
                 {
-                    FileName = "espeak-ng",
-                    Arguments = $"-w \"{tmpFile}\" \"{text.Replace("\"", "")}\"",
+                    FileName = "/usr/local/piper/piper",
+                    Arguments = $"--model {voicePath} --output_file \"{tmpFile}\"",
                     UseShellExecute = false,
+                    RedirectStandardInput = true,
                     RedirectStandardError = true
                 }
             };
             process.Start();
+            process.StandardInput.WriteLine(text.Replace("\"", ""));
+            process.StandardInput.Close();
             process.WaitForExit();
             var bytes = File.ReadAllBytes(tmpFile);
             File.Delete(tmpFile);
