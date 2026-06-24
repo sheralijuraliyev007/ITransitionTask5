@@ -1,13 +1,18 @@
-caddy:
-    image: caddy:alpine
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: ITransitionTask5/Dockerfile
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-    depends_on:
-      - blazor
+      - "5007:8080"
+    restart: unless-stopped
 
-volumes:
-  caddy_data:
+  blazor:
+    build:
+      context: .
+      dockerfile: ITransitionTask5.Blazor/Dockerfile
+    ports:
+      - "8081:80"
+    restart: unless-stopped
+    depends_on:
+      - backend
