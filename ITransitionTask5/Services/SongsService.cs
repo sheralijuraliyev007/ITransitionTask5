@@ -1,4 +1,5 @@
 ﻿using Bogus;
+using Bogus.DataSets;
 using ITransitionTask5.Data;
 using ITransitionTask5.Data.Entities;
 using Newtonsoft.Json;
@@ -47,7 +48,7 @@ namespace ITransitionTask5.Services
                 var faker = new Faker<Song>(safeLocale)
                     .StrictMode(true)
                     .RuleFor(s => s.Index, _ => i)
-                    .RuleFor(s => s.Title, f => f.Hacker.Noun() + " " + f.Hacker.IngVerb())
+                    .RuleFor(s => s.Title, f => f.Hacker.Noun().ToUpper()+""+f.Hacker.Noun().ToUpper())
                     .RuleFor(s => s.Artist, f => rng.Next(2) == 0
                         ? f.Name.FullName()
                         : f.Commerce.ProductAdjective() + " " + f.Hacker.Noun())
