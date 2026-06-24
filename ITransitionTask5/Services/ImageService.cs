@@ -51,7 +51,7 @@ namespace ITransitionTask5.Services
 
             do
             {
-                font = SystemFonts.CreateFont("Arial", startingFontSize);
+                font = SystemFonts.CreateFont("FreeSans", startingFontSize);
 
                 options = new RichTextOptions(font)
                 {
