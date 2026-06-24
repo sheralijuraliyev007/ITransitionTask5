@@ -3,7 +3,9 @@ using Bogus.DataSets;
 using ITransitionTask5.Data;
 using ITransitionTask5.Data.Entities;
 using Newtonsoft.Json;
+using System.Globalization;
 using System.Speech.Synthesis;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ITransitionTask5.Services
 {
@@ -48,7 +50,7 @@ namespace ITransitionTask5.Services
                 var faker = new Faker<Song>(safeLocale)
                     .StrictMode(true)
                     .RuleFor(s => s.Index, _ => i)
-                    .RuleFor(s => s.Title, f => f.Hacker.Noun().ToUpper()+""+f.Hacker.Noun().ToUpper())
+                    .RuleFor(s => s.Title, f => CultureInfo.InvariantCulture.TextInfo.ToTitleCase(f.Hacker.Noun()) + CultureInfo.InvariantCulture.TextInfo.ToTitleCase(f.Hacker.Noun()))
                     .RuleFor(s => s.Artist, f => rng.Next(2) == 0
                         ? f.Name.FullName()
                         : f.Commerce.ProductAdjective() + " " + f.Hacker.Noun())
