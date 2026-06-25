@@ -6,6 +6,9 @@ services:
     ports:
       - "5007:8080"
     restart: unless-stopped
+    volumes:
+      - /var/www/piper-voices:/app/voices
+      - /usr/local/piper:/usr/local/piper
 
   blazor:
     build:
