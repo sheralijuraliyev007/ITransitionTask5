@@ -111,7 +111,7 @@ namespace ITransitionTask5.Services
                 StartInfo = new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = "/usr/local/piper/piper",
-                    Arguments = $"--model {voicePath} --output_file \"{tmpFile}\"",
+                    Arguments = $"--model {voicePath} --output_file \"{tmpFile}\" --espeak_data /usr/local/piper/espeak-ng-data",
                     UseShellExecute = false,
                     RedirectStandardInput = true,
                     RedirectStandardError = true
