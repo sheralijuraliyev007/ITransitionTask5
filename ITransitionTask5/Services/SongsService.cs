@@ -13,14 +13,10 @@ namespace ITransitionTask5.Services
     {
         private static readonly Dictionary<string, List<string>> _genres = LoadGenres();
 
-        private readonly IConfiguration _config;
 
         private static readonly HashSet<string> _supported = ["en", "ru", "es"];
 
-        public SongsService(IConfiguration config)
-        {
-            _config = config;
-        }
+
 
 
         private static Dictionary<string, List<string>> LoadGenres()
@@ -140,12 +136,12 @@ namespace ITransitionTask5.Services
             int lineCount = rnd.Next(8, 16);
             for (int i = 0; i < lineCount; i++)
             {
-                
+
                 string line = rnd.Next(3) switch
                 {
-                    0 => $"{faker.Hacker.Verb()} {faker.Hacker.Noun()}, {faker.Hacker.Verb()} {faker.Hacker.Noun()}",
-                    1 => $"{faker.Commerce.ProductAdjective()} {faker.Hacker.Noun()} {faker.Hacker.IngVerb()}",
-                    _ => $"{faker.Address.City()} {faker.Hacker.Verb()} {faker.Hacker.Adjective()}"
+                    0 => $"{faker.Lorem.Word()} {faker.Lorem.Word()}, {faker.Lorem.Word()} {faker.Lorem.Word()}",
+                    1 => $"{faker.Commerce.ProductAdjective()} {faker.Lorem.Word()} {faker.Lorem.Word()}",
+                    _ => $"{faker.Address.City()} {faker.Lorem.Word()} {faker.Lorem.Word()}"
                 };
 
                 lines.Add(new LyricLine

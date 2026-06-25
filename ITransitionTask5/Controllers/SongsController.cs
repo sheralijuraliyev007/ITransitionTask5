@@ -75,12 +75,12 @@ namespace ITransitionTask5.Controllers
         //    return File(zipMs.ToArray(), "application/zip", "songs.zip");
         //}
 
-        
+
 
         [HttpGet("{index}/speech")]
         public IActionResult GetSpeech(int index, [FromQuery] string text, string locale = "en")
         {
-            var bytes = _songsService.GetSpeech(text);
+            var bytes = _songsService.GetSpeech(text, locale);
             return File(bytes, "audio/wav");
         }
     }
